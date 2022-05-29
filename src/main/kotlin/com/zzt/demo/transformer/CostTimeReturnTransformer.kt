@@ -14,7 +14,7 @@ import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.util.render
 
 class CostTimeReturnTransformer(
-  private val irPluginContext: IrPluginContext,
+  private val pluginContext: IrPluginContext,
   private val irFunction: IrFunction,
   private val startTime: IrValueDeclaration
 ): IrElementTransformerVoidWithContext() {
@@ -25,9 +25,14 @@ class CostTimeReturnTransformer(
       return super.visitReturn(expression)
 
     println("transform return:: ")
-    return DeclarationIrBuilder(irPluginContext, irFunction.symbol).irBlock {
+    return DeclarationIrBuilder(pluginContext, irFunction.symbol).irBlock {
+      if (irFunction.returnType == pluginContext.irBuiltIns.unitType) {
+        +costExit(pluginContext, irFunction, startTime)
+        return@irBlock
+      }
+
       val result = irTemporary(expression.value) //保存返回表达式
-      +costExit(irPluginContext, irFunction, startTime, irGet(result)) // 将统计时间逻辑插到 return 之前
+      +costExit(pluginContext, irFunction, startTime, irGet(result)) // 将统计时间逻辑插到 return 之前
       +expression.apply {
         value = irGet(result) // 将原有的返回表达式补回
       }

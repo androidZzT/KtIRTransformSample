@@ -43,9 +43,6 @@ class MethodCostTimeTransformer(
         for(statement in irBody.statements) { //原有方法体中的表达式
           +statement
         }
-        if (irFunction.returnType == pluginContext.irBuiltIns.unitType) {
-          +costExit(pluginContext, irFunction, startTime)
-        }
       }.transform(CostTimeReturnTransformer(pluginContext, irFunction, startTime), null)
     }
   }
